@@ -41,7 +41,7 @@ body {
 
 
 .hotslot-container {
-  background-color: rgba(12, 12, 17, 0.966);
+  background-color: #0c0c11f6;
   position: relative;
   display: flex;
   justify-content: center;
@@ -88,10 +88,10 @@ input[type='number']::-webkit-outer-spin-button {
 
 .MuiMenu-list {
   min-width: 200px;
-  background-color: $mainColor;
-  color: $textColor;
+  background-color: #16161aef;
+  color: #c1c2c5;
   padding: 4px;
-  border-color: rgba(0, 0, 0, 0.2);
+  border-color: #0003;
   border-style: inset;
   border-width: 1px;
   font-size: 16px !important;
@@ -298,6 +298,7 @@ button:active {
 .inventory-slot-label-box {
   color: $textColor;
   text-align: center;
+  font-weight:700;
   border-bottom-left-radius: 0.25vh;
   border-bottom-right-radius: 0.25vh;
 }
@@ -361,14 +362,15 @@ button:active {
   justify-content: space-between;
   width: 100%;
   padding: 5px;
-  gap: 3px;
-  p {
+  gap: 3px
+}
+
+.item-slot-info-wrapper p {
     font-size: 11px;
     background-color: #28272acb;
     padding: 5px;
     border-radius: 1rem;
   }
-}
 
 .item-slot-currency-wrapper {
   display: flex;
@@ -387,7 +389,7 @@ button:active {
   flex-direction: row;
   justify-content: flex-end;
   padding-right: 3px;
-  p {
+  .item-slot-price-wrapper p {
     font-size: 14px;
     text-shadow: 0.1vh 0.1vh 0 rgba(0, 0, 0, 0.7);
   }

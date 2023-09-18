@@ -75,9 +75,7 @@ debugData([
             weight: 500,
             price: 300,
             ingredients: {
-              iron: 5,
-              copper: 12,
-              powersaw: 0.1,
+				water: 5,
             },
             metadata: {
               description: 'Simple lockpick that breaks easily and can pick basic door locks',

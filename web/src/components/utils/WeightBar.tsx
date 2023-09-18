@@ -15,9 +15,9 @@ const colorMixer = (rgbA: number[], rgbB: number[], amountToMix: number) => {
 
 const COLORS = {
   // Colors used - https://materialui.co/flatuicolors
-  primaryColor: [17, 225, 160], // Red (Pomegranate)
-  secondColor: [17, 225, 160], // Green (Nephritis)
-  accentColor: [17, 225, 160], // Orange (Oragne)
+  primaryColor: [58, 144, 255], // Red (Pomegranate)
+  secondColor: [58, 144, 255], // Green (Nephritis)
+  accentColor: [58, 144, 255], // Orange (Oragne)
 };
 
 const WeightBar: React.FC<{ percent: number; durability?: boolean }> = ({ percent, durability }) => {

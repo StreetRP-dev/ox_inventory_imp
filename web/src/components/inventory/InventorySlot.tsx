@@ -140,13 +140,13 @@ const InventorySlot: React.FC<SlotProps> = ({ inventory, item }) => {
               <div className="item-slot-info-wrapper">
                 {item.count > 0 && <p>{item.count ? item.count.toLocaleString('en-us') : ''}</p>}
                 {item.weight > 0 && (
-                <p>
-                  {item.weight > 0
-                    ? `${(item.weight / 100).toLocaleString('en-us', {
-                        minimumFractionDigits: 2,
-                      })}`
-                    : ''}
-                </p>
+                  <p>
+                    {item.weight > 0
+                      ? `${(item.weight / 100).toLocaleString('en-us', {
+                          minimumFractionDigits: 2,
+                        })}`
+                      : ''}
+                  </p>
                 )}
               </div>
             </div>
@@ -190,7 +190,12 @@ const InventorySlot: React.FC<SlotProps> = ({ inventory, item }) => {
               )}
               <div className="inventory-slot-label-box">
                 <div className="inventory-slot-label-text">
-                  {item.metadata?.label ? item.metadata.label : Items[item.name]?.label || item.name}
+                  <p
+                    style={{
+                      fontWeight: 700,
+                    }}>
+                    {item.metadata?.label ? item.metadata.label : Items[item.name]?.label || item.name}
+                  </p>
                 </div>
                 {inventory.type !== 'shop' && item?.durability !== undefined && (
                   <WeightBar percent={item.durability} durability />
