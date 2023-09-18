@@ -94,7 +94,7 @@ end
 
 ---@param source number
 ---@param invType string
----@param data? string|number|table
+---@param data string|number|table
 ---@param ignoreSecurityChecks boolean?
 ---@return boolean|table|nil
 ---@return table?
@@ -104,12 +104,7 @@ local function openInventory(source, invType, data, ignoreSecurityChecks)
 	local left = Inventory(source) --[[@as OxInventory]]
 	local right, closestCoords
 
-    left:closeInventory(true)
-	Inventory.CloseAll(left, source)
-
-    if invType == 'player' and data == source then
-        data = nil
-    end
+	Inventory.CloseAll(left, (invType == 'drop' or invType == 'container' or not invType) and source)
 
 	if data then
 		if invType == 'stash' then
@@ -141,7 +136,7 @@ local function openInventory(source, invType, data, ignoreSecurityChecks)
 				end
 			end
 		elseif invType == 'container' then
-			left.containerSlot = data --[[@as number]]
+			left.containerSlot = data
 			data = left.items[data]
 
 			if data then
@@ -166,8 +161,6 @@ local function openInventory(source, invType, data, ignoreSecurityChecks)
 		if invType == 'container' then hookPayload.slot = left.containerSlot end
 
 		if not TriggerEventHooks('openInventory', hookPayload) then return end
-
-        if left == right then return end
 
 		if right.player then
 			if right.open then return end
@@ -224,7 +217,7 @@ end)
 ---@param invType string
 ---@param data string|number|table
 exports('forceOpenInventory', function(playerId, invType, data)
-	local left, right = openInventory(playerId, invType, data, true)
+	local left, right = openInventory(playerId, invType, data)
 
 	if left and right then
 		TriggerClientEvent('ox_inventory:forceOpenInventory', playerId, left, right)
@@ -309,7 +302,7 @@ lib.callback.register('ox_inventory:useItem', function(source, itemName, slot, m
 		end
 
 		if item and data and data.count > 0 and data.name == item.name then
-			data = {name=data.name, label=label, count=data.count, slot=slot, metadata=data.metadata, weight=data.weight}
+			data = {name=data.name, label=label, count=data.count, slot=slot, metadata=data.metadata}
 
 			if item.ammo then
 				if inventory.weapon then
@@ -571,7 +564,7 @@ lib.addCommand('saveinv', {
 	},
 	restricted = 'group.admin',
 }, function(source, args)
-	Inventory.SaveInventories(args.lock == 'true', false)
+	Inventory.SaveInventories(args.lock == 'true')
 end)
 
 lib.addCommand('viewinv', {

@@ -159,31 +159,22 @@ function db.loadTrunk(id)
     return MySQL.prepare.await(Query.SELECT_TRUNK, { id })
 end
 
-local function countRows(rows)
-    if type(rows) ~= 'table' then return rows end
-
-    local n = 0
-
-    for i = 1, #rows do
-        if rows[i] == 1 then n += 1 end
-    end
-
-    return n
-end
-
-function db.saveInventories(players, trunks, gloveboxes, stashes, total)
+function db.saveInventories(players, trunks, gloveboxes, stashes)
     local numPlayer, numTrunk, numGlove, numStash = #players, #trunks, #gloveboxes, #stashes
-    local promises = {}
-    local start = os.nanotime()
+    local total = numPlayer + numTrunk + numGlove + numStash
+    local promises
 
-    shared.info(('Saving %s inventories to the database'):format(total))
+    if total > 0 then
+        promises = {}
+        shared.info(('Saving %s inventories to the database'):format(total))
+    end
 
     if numPlayer > 0 then
         local p = promise.new()
         promises[#promises + 1] = p
 
-        MySQL.prepare(Query.UPDATE_PLAYER, players, function(resp)
-            shared.info(('Saved %s/%s (%.4f ms)'):format(countRows(resp), numPlayer, (os.nanotime() - start) / 1e6))
+        MySQL.prepare(Query.UPDATE_PLAYER, players, function(affectedRows)
+            shared.info(('Saved %s/%s players'):format(affectedRows, numPlayer))
             p:resolve()
         end)
     end
@@ -192,8 +183,8 @@ function db.saveInventories(players, trunks, gloveboxes, stashes, total)
         local p = promise.new()
         promises[#promises + 1] = p
 
-        MySQL.prepare(Query.UPDATE_TRUNK, trunks, function(resp)
-            shared.info(('Saved %s/%s trunks (%.4f ms)'):format(countRows(resp), numTrunk, (os.nanotime() - start) / 1e6))
+        MySQL.prepare(Query.UPDATE_TRUNK, trunks, function(affectedRows)
+            shared.info(('Saved %s/%s trunks'):format(affectedRows, numTrunk))
             p:resolve()
         end)
     end
@@ -202,8 +193,8 @@ function db.saveInventories(players, trunks, gloveboxes, stashes, total)
         local p = promise.new()
         promises[#promises + 1] = p
 
-        MySQL.prepare(Query.UPDATE_GLOVEBOX, gloveboxes, function(resp)
-            shared.info(('Saved %s/%s gloveboxes (%.4f ms)'):format(countRows(resp), numGlove, (os.nanotime() - start) / 1e6))
+        MySQL.prepare(Query.UPDATE_GLOVEBOX, gloveboxes, function(affectedRows)
+            shared.info(('Saved %s/%s gloveboxes'):format(affectedRows, numGlove))
             p:resolve()
         end)
     end
@@ -212,14 +203,16 @@ function db.saveInventories(players, trunks, gloveboxes, stashes, total)
         local p = promise.new()
         promises[#promises + 1] = p
 
-        MySQL.prepare(Query.UPDATE_STASH, stashes, function(resp)
-            shared.info(('Saved %s/%s stashes (%.4f ms)'):format(countRows(resp), numStash, (os.nanotime() - start) / 1e6))
+        MySQL.prepare(Query.UPDATE_STASH, stashes, function(affectedRows)
+            shared.info(('Saved %s/%s stashes'):format(affectedRows, numStash))
             p:resolve()
         end)
     end
 
-    -- All queries must run asynchronously on resource stop, so we'll await multiple promises instead.
-    Citizen.Await(promise.all(promises))
+    if promises then
+        -- All queries must run asynchronously on resource stop, so we'll await multiple promises instead.
+        Citizen.Await(promise.all(promises))
+    end
 end
 
 return db
