@@ -30,7 +30,7 @@ const SlotTooltip: React.FC<{ item: SlotWithItem; inventory: Inventory }> = ({ i
       ) : (
         <div className="tooltip-wrapper">
           <div className="tooltip-header-wrapper">
-            <p style={{fontWeight: 500}}>{item.metadata?.label || itemData.label || item.name}</p>
+            <p>{item.metadata?.label || itemData.label || item.name}</p>
             {inventory.type === 'crafting' ? (
               <div className="tooltip-crafting-duration">
                 <ClockIcon />
