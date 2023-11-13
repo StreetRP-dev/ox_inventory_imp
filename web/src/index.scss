@@ -6,9 +6,9 @@ $seconaryColor: #16161aef;
 $secondaryColorLight: #16161aef;
 $secondaryColorDark: #16161aef;
 
-$gridCols: 6;
-$gridRows: 6;
-$gridCols-right: 4;
+$gridCols: 5;
+$gridRows: 5;
+$gridCols-right: 5;
 $gridRows-right: 5;
 $gridSize: 10.2vh;
 $gridGap: 0.5rem;
@@ -41,7 +41,7 @@ body {
 
 
 .hotslot-container {
-  background-color: #0c0c11f6;
+  background-color: rgba(5, 5, 5, 0.966);
   position: relative;
   display: flex;
   justify-content: center;
@@ -138,7 +138,7 @@ button:active {
 }
 
 .inventory-wrapper-container {
-  background-color: rgba(12, 12, 17, 0.966);
+  background-color: rgba(5, 5, 5, 0.966);
   display: flex;
   flex-direction: row;
   justify-content: center;
