@@ -154,6 +154,8 @@ local function loadInventoryData(data, player)
 				if not entity then
 					return shared.info('Failed to load vehicle inventory data (no entity exists with given netid).')
 				end
+
+                data.entityId = entity
 			else
 				local vehicles = GetAllVehicles()
 
@@ -163,6 +165,7 @@ local function loadInventoryData(data, player)
 
 					if _plate:find(plate) then
 						entity = vehicle
+                        data.entityId = entity
 						data.netid = NetworkGetNetworkIdFromEntity(entity)
 						break
 					end
@@ -183,18 +186,8 @@ local function loadInventoryData(data, player)
 
 			local model, class = lib.callback.await('ox_inventory:getVehicleData', source, data.netid)
 			local storage = Vehicles[data.type].models[model] or Vehicles[data.type][class]
-
-			if Ox then
-				local vehicle = Ox.GetVehicle(entity)
-
-				if vehicle then
-					inventory = Inventory.Create(vehicle.id or vehicle.plate, plate, data.type, storage[1], 0, storage[2], false)
-				end
-			end
-
-			if not inventory then
-				inventory = Inventory.Create(data.id, plate, data.type, storage[1], 0, storage[2], false)
-			end
+            local vehicleId = server.getOwnedVehicleId and server.getOwnedVehicleId(entity)
+            inventory = Inventory.Create(vehicleId or data.id, plate, data.type, storage[1], 0, storage[2], false)
 		end
 	elseif data.type == 'policeevidence' then
 		inventory = Inventory.Create(data.id, locale('police_evidence'), data.type, 100, 0, 100000, false)
@@ -224,6 +217,7 @@ local function loadInventoryData(data, player)
 	end
 
 	if data.netid then
+        inventory.entityId = data.entityId or NetworkGetEntityFromNetworkId(data.netid)
 		inventory.netid = data.netid
 	end
 
@@ -630,6 +624,8 @@ function Inventory.Remove(inv)
 		Inventories[inv.id] = nil
 	end
 end
+
+exports('RemoveInventory', Inventory.Remove)
 
 ---Update the internal reference to vehicle stashes. Does not trigger a save or update the database.
 ---@param oldPlate string
@@ -2245,7 +2241,13 @@ local function prepareInventorySave(inv, buffer, time)
     return 4, { data, inv.owner and tostring(inv.owner) or '', inv.dbId }
 end
 
-local function saveInventories(manual)
+local isSaving = false
+local inventoryClearTime = GetConvarInt('inventory:cleartime', 5) * 60
+
+local function saveInventories(clearInventories)
+	if isSaving then return end
+
+	isSaving = true
 	local time = os.time()
 	local parameters = { {}, {}, {}, {} }
 	local size = { 0, 0, 0, 0 }
@@ -2254,9 +2256,18 @@ local function saveInventories(manual)
 	for _, inv in pairs(Inventories) do
         local index, data = prepareInventorySave(inv, buffer, time)
 
-        if index then
-            size[index] += 1
-            parameters[index][size[index]] = data
+        if index and data then
+            total += 1
+
+            if index == 4 then
+                for i = 1, 3 do
+                    size[index] += 1
+                    parameters[index][size[index]] = data[i]
+                end
+            else
+                size[index] += 1
+                parameters[index][size[index]] = data
+            end
         end
 	end
 
@@ -2265,14 +2276,13 @@ local function saveInventories(manual)
     if not manual then return end
 
     for _, inv in pairs(Inventories) do
-        if not inv.open then
-            if inv.datastore and inv.netid and (inv.type == 'trunk' or inv.type == 'glovebox') then
-                if NetworkGetEntityFromNetworkId(inv.netid) == 0 then
+        if not inv.open and not inv.player then
+            -- clear inventory from memory if unused for x minutes, or on entity/netid mismatch
+            if inv.type == 'glovebox' or inv.type == 'trunk' then
+                if NetworkGetEntityFromNetworkId(inv.netid) ~= inv.entityId then
                     Inventory.Remove(inv)
                 end
-            elseif not inv.player and (inv.datastore or inv.owner) and time - inv.time >= 1200 then
-                -- inv.time is a timestamp for when the inventory was last closed
-                -- if unopened for n seconds, the inventory is unloaded (datastore/temp stash is deleted)
+            elseif time - inv.time >= inventoryClearTime then
                 Inventory.Remove(inv)
             end
         end
@@ -2460,6 +2470,10 @@ local function updateWeapon(source, action, value, slot, specialAmmo)
 			elseif action == 'melee' and value > 0 then
 				weapon.metadata.durability = weapon.metadata.durability - ((Items(weapon.name).durability or 1) * value)
 			end
+
+            if (weapon.metadata.durability or 0) < 0 then
+                weapon.metadata.durability = 0
+            end
 
 			if action ~= 'throw' then
 				inventory:syncSlotsWithPlayer({
